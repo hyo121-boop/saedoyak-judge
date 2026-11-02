@@ -194,7 +194,7 @@ interface JudgeResponse {
 |---|---|
 | 화면 | `app/page.tsx` (App Router) |
 | 서버 쪽 판정 | `app/api/judge/route.ts` (Route Handler, 파일을 받는 POST 요청) |
-| 실행 환경 | `route.ts`에 `export const runtime = "nodejs"` (ExcelJS는 Node.js에서만 동작)와 `export const maxDuration = 300` (최대 5분, SC-1과 같음)을 둔다. |
+| 실행 환경 | `route.ts`에 `export const maxDuration = 300` (최대 5분, SC-1과 같음)을 둔다. ExcelJS는 Node.js에서만 동작하는데, 이 프로젝트는 `next.config.ts`에 `cacheComponents`가 켜져 있어 기본 실행 환경이 Node.js로 고정되고 `runtime` 설정은 쓸 수 없다 (Next.js 16 공식 문서). 그래서 `runtime`은 두지 않는다. |
 | 크기 제한 | Vercel은 서버 요청과 응답 크기를 각각 약 4.5MB로 제한한다. 업로드는 4MB 이하만 받고, 결과 엑셀(base64로 약 1.33배)과 목록 100건이 이 안에 들어오는지 PLAN 작업 18에서 측정한다. |
 | 화면 꾸미기 | Tailwind CSS (이미 설치됨) |
 | 배포 | Part 5에서 Vercel에 그대로 배포 (추가 설정 없음) |
@@ -447,3 +447,4 @@ PLAN.md 1번 작업 순서(1~21)를 그대로 따른다.
 | 0.1 | 2026-11-02 | 첫 초안 | kwon |
 | 0.2 | 2026-11-02 | 문서 교차 검토 반영: 판정 순서 6단계, 경계 계산식, 행 수 불일치 시 내려받기만 차단, 빈 행 유지 | kwon |
 | 0.3 | 2026-11-02 | 검토 B 묶음 반영: 머리글·병합 칸·금액 정리 규칙, 판정 함수 모양, server-only 위치, 실행 환경·크기 제한, API 확인 항목 추가 | kwon |
+| 0.4 | 2026-11-02 | 실행 환경: cacheComponents 때문에 runtime 설정을 빼고 maxDuration만 두도록 실제 구현에 맞춤 | kwon |
