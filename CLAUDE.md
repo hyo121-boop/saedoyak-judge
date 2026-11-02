@@ -23,6 +23,8 @@ npm run dev     # 개발 서버 (http://localhost:3000)
 npm run build   # 배포용 빌드 — 작업을 마치면 반드시 통과 확인
 npm run lint    # 코드 검사
 npm test        # 판정 규칙 자동 테스트 (Vitest)
+npm run check:sample       # private/담당자_표본.xlsx를 실제 .env 기준값으로 대조
+npm run make:check-sample  # 대조용 임의 표본 만들기 (.env 기준값 필요)
 ```
 
 ## 4. 폴더 구조 규칙
@@ -72,6 +74,7 @@ npm test        # 판정 규칙 자동 테스트 (Vitest)
 - 실제 채무자 자료는 쓰지 않는다. 샘플 데이터는 `채무자0001` 같은 번호만 쓰고, 주민등록번호·연락처·주소 열은 만들지 않는다.
 - `.env`의 내용을 읽어서 대화에 옮겨 적거나, 커밋하거나, 다른 파일에 복사하지 않는다. `.env`가 `.gitignore`에 들어 있는지 지우지 않는다.
 - 필요한 환경변수 이름은 값 없이 `.env.example`에만 적는다.
+- 담당자 표본처럼 입력값과 기대 판정이 함께 든 자료는 기준값을 짐작할 수 있으므로 `private/` 폴더에만 두고 커밋하지 않는다.
 
 ## 8. 만들지 않는 것 (PRD 6번 비범위)
 

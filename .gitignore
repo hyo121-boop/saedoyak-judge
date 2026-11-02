@@ -44,6 +44,9 @@ yarn-error.log*
 # bkit 플러그인 진행 기록 (자동 생성)
 /.bkit/
 
+# 담당자 표본 등 기준값을 짐작할 수 있는 자료 (커밋 금지)
+/private/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

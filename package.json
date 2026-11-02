@@ -7,8 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run --passWithNoTests",
-    "samples": "node scripts/make-samples.mjs"
+    "test": "vitest run --passWithNoTests --exclude tests/sample-check.test.ts",
+    "samples": "node scripts/make-samples.mjs",
+    "check:sample": "vitest run tests/sample-check.test.ts",
+    "make:check-sample": "node scripts/make-check-sample.mjs"
   },
   "dependencies": {
     "exceljs": "^4.4.0",
