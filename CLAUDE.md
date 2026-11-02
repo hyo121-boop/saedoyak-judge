@@ -22,13 +22,15 @@
 npm run dev     # 개발 서버 (http://localhost:3000)
 npm run build   # 배포용 빌드 — 작업을 마치면 반드시 통과 확인
 npm run lint    # 코드 검사
+npm test        # 판정 규칙 자동 테스트 (Vitest)
 ```
 
 ## 4. 폴더 구조 규칙
 
 - 화면: `app/` 아래 (`app/page.tsx`가 업로드 첫 화면)
 - 서버 쪽 코드(API): `app/api/.../route.ts`
-- 판정 규칙 계산: 서버에서만 실행되는 별도 파일로 분리한다 (예: `lib/judge.ts`, 맨 위에 `import "server-only"`).
+- 판정 규칙 계산: `lib/judge/rules.ts`로 분리하고, 기준값은 인자로 받는 순수 함수로 만든다 (테스트하기 위해 `server-only`를 넣지 않는다).
+- `.env`의 기준 숫자는 `lib/judge/config.ts`에서만 읽고, 이 파일 맨 위에 `import "server-only"`를 넣는다.
 - 경로는 `@/` 별칭을 쓴다 (예: `@/lib/judge`).
 - 실제 폴더 이름은 `my app3`이고, 문서에서 말하는 `my-app`과 같은 폴더다.
 
@@ -111,7 +113,7 @@ npm run lint    # 코드 검사
 코드를 바꿀 때마다 아래 순서를 매번 반복(루프)한다.
 
 1. **변경한다.**
-2. **검사한다:** `npm run lint`와 `npm run build`를 실행해 오류가 없는지 확인한다.
+2. **검사한다:** `npm run lint`, `npm run build`, `npm test`를 실행해 오류가 없는지 확인한다.
 3. **화면을 확인한다:** 화면이 바뀐 작업이면 `npm run dev`로 띄워 실제로 보이는지 확인한다.
 4. **고친다:** 2)나 3)에서 문제가 있으면 고치고 다시 1)로 돌아간다.
 5. **커밋한다:** 통과하면 git 커밋으로 그 상태를 남긴다.
