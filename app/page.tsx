@@ -1,69 +1,84 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+
+import ResultPanel from "@/components/ResultPanel";
+import UploadPanel from "@/components/UploadPanel";
+import { MAX_FILE_BYTES, type JudgeResponse, type JudgeSuccess } from "@/lib/judge/types";
+
+// 화면 1개, 상태: 업로드 전 → 처리 중 → 결과(내려받기 막힘 포함) / 오류 (DESIGN.md 5번)
+type Screen =
+  | { kind: "upload"; error: string | null }
+  | { kind: "processing" }
+  | { kind: "result"; fileName: string; result: JudgeSuccess };
+
+const NETWORK_ERROR = "처리 중 문제가 생겼습니다. 인터넷 연결을 확인하고 다시 올려 주세요.";
 
 export default function Home() {
+  const [file, setFile] = useState<File | null>(null);
+  const [screen, setScreen] = useState<Screen>({ kind: "upload", error: null });
+
+  function chooseFile(next: File | null) {
+    setFile(next);
+    setScreen({ kind: "upload", error: null });
+  }
+
+  async function submit() {
+    if (!file) return;
+    // 서버도 같은 검사를 하지만, 올리기 전에 먼저 알려 준다
+    if (!file.name.toLowerCase().endsWith(".xlsx")) {
+      setScreen({ kind: "upload", error: ".xlsx 형식의 엑셀 파일만 올릴 수 있습니다." });
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setScreen({ kind: "upload", error: "파일이 너무 큽니다. 나눠서 올려 주세요." });
+      return;
+    }
+
+    setScreen({ kind: "processing" });
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/judge", { method: "POST", body: form });
+      const body = (await response.json()) as JudgeResponse;
+      if (body.ok) {
+        setScreen({ kind: "result", fileName: file.name, result: body });
+      } else {
+        setScreen({ kind: "upload", error: body.error.message });
+      }
+    } catch {
+      setScreen({ kind: "upload", error: NETWORK_ERROR });
+    }
+  }
+
+  function reset() {
+    setFile(null);
+    setScreen({ kind: "upload", error: null });
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10 sm:py-14">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold sm:text-3xl">새도약기금 심사 프로그램</h1>
+        <p className="text-muted">채무자 엑셀을 올리면 상환능력을 판정하고, 판정·근거 열을 붙인 엑셀을 돌려드립니다.</p>
+      </header>
+
+      {screen.kind === "upload" && screen.error && (
+        <p role="alert" className="rounded-md bg-danger-soft px-4 py-3 text-danger">
+          {screen.error}
+        </p>
+      )}
+
+      {screen.kind === "result" ? (
+        <ResultPanel fileName={screen.fileName} result={screen.result} onReset={reset} />
+      ) : (
+        <UploadPanel
+          file={file}
+          processing={screen.kind === "processing"}
+          onFileChange={chooseFile}
+          onSubmit={submit}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
