@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 새도약기금 심사 프로그램
 
-## Getting Started
+새도약기금 심사 담당자가 채무자 엑셀 자료를 올리면, 정해진 규칙으로 **상환능력을 판정**하고 판정·근거 열을 붙인 **결과 엑셀을 돌려주는** 내부용 웹 프로그램입니다.
 
-First, run the development server:
+수십만 건의 재산·소득 자료를 엑셀로 직접 계산하던 일을 "파일 올리기 → 결과 내려받기" 두 단계로 줄이는 것이 목표입니다.
+
+> 이 저장소는 실습용입니다. 들어 있는 데이터는 모두 직접 만든 가짜(샘플) 데이터이며, 실제 채무자 정보나 실제 심사기준은 없습니다.
+
+## 주요 기능
+
+1. **엑셀 업로드 → 상환능력 자동 판정**
+   - 판정은 `상환능력 없음` / `상환능력 있음` / `재검토 필요` 3가지 중 하나입니다.
+   - 판정마다 근거를 고정 문구 5개 중 하나로 남깁니다.
+   - 중복 채무자번호, 빠지거나 잘못된 값, 기준선 근처(경계값)는 "재검토 필요"로 따로 모아 줍니다.
+   - 판정은 AI가 아니라 코드로 정한 규칙대로 계산합니다.
+2. **판정 결과 엑셀 내려받기**
+   - 원본 열은 그대로 두고 맨 뒤에 `판정`, `근거` 2개 열만 붙입니다.
+   - 화면에서는 판정별 건수와 "재검토 필요" 목록(최대 100건)을 먼저 보여 줍니다.
+
+## 입력 엑셀 양식
+
+| 열 이름 | 내용 | 단위 |
+|---|---|---|
+| 채무자번호 | 채무자를 구분하는 번호 | - |
+| 가구원수 | 채무자를 포함한 가구원 수 | 명 |
+| 월소득 | 가구의 월 소득 | 원 |
+| 회수가능재산 | 회수할 수 있는 재산 | 원 |
+
+- `.xlsx` 파일, 4MB 이하, 한 번에 최대 1만 건까지 처리합니다.
+- 첫 번째 시트만 읽고, 1행은 열 이름입니다. 열 순서는 상관없습니다.
+- 바로 써 볼 수 있는 가짜 데이터가 [`samples/`](samples) 폴더에 있습니다.
+
+## 실행 방법
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env   # 판정 기준값 3개를 채워 넣습니다
+npm run dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+판정 기준값은 대외비라 저장소에 넣지 않습니다. 필요한 환경변수 이름은 [`.env.example`](.env.example)에 있습니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| 환경변수 | 내용 |
+|---|---|
+| `JUDGE_INCOME_RATIO` | 소득 기준 비율 (소수로, 예: 50%면 0.5) |
+| `JUDGE_BORDER_RATE` | 경계 비율 (소수로) |
+| `JUDGE_MEDIAN_INCOME_JSON` | 가구원수별 기준 중위소득표 (JSON) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 자주 쓰는 명령어
 
-## Learn More
+| 명령어 | 하는 일 |
+|---|---|
+| `npm run dev` | 개발 서버 실행 |
+| `npm run build` | 배포용 빌드 |
+| `npm run lint` | 코드 검사 |
+| `npm test` | 판정 규칙 자동 테스트 (Vitest) |
+| `npm run samples` | 가짜 샘플 엑셀 다시 만들기 |
+| `npm run make:check-sample` | 대조용 표본 만들기 (`private/`에 저장, 커밋되지 않음) |
+| `npm run check:sample` | 표본을 실제 기준값으로 판정해 기대값과 대조 |
 
-To learn more about Next.js, take a look at the following resources:
+## 기술 스택
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| 도구 | 쓰임 |
+|---|---|
+| Next.js 16 (App Router) | 화면과 서버 쪽 코드(API)를 한 프로젝트에서 처리 |
+| Tailwind CSS | 화면 꾸미기 |
+| ExcelJS | 엑셀 읽기·쓰기 |
+| server-only | 기준값을 읽는 코드가 브라우저에 섞이지 않게 막는 안전장치 |
+| Vitest | 판정 규칙 자동 테스트 |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+배포는 Vercel을 사용합니다.
 
-## Deploy on Vercel
+## 보안 원칙
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- 판정 기준 숫자는 `.env`(배포 시 Vercel 환경변수)에서만 읽고, 판정은 서버에서만 합니다. 화면·결과 엑셀·오류 메시지에는 기준 숫자를 보여 주지 않습니다.
+- 올린 파일과 판정 결과는 저장하지 않습니다. 요청을 처리하는 동안에만 메모리에 있고 응답 후 사라집니다.
+- 로그인 기능은 없습니다 (기획 범위 밖). 실제 업무에 쓰려면 배포 주소에 접근 제한을 걸어야 합니다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 문서
+
+| 문서 | 내용 |
+|---|---|
+| [PRD.md](PRD.md) | 서비스 기획서: 문제 정의, 목표, 기능, 범위, 보안 검토 |
+| [PLAN.md](PLAN.md) | 작업 계획서: 성공 기준과 작업 순서 |
+| [DESIGN.md](DESIGN.md) | 설계서: 화면 구성, 데이터 흐름, 판정 순서, 기술 선택 |
+| [CHECK.md](CHECK.md) | 점검 결과: 성공 기준 판정, 보안 점검, 남은 할 일 |
+| [CLAUDE.md](CLAUDE.md) | AI 코딩 도우미(Claude)가 지키는 프로젝트 규칙 |
